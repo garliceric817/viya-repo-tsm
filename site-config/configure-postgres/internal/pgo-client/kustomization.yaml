@@ -1,0 +1,7 @@
+resources:
+- resources.yaml
+configMapGenerator:
+  - name: pgo-command
+    behavior: merge
+    literals:
+    - pgo-sub-command=echo "Wait 300 seconds for PostgreSQL to start"; sleep 300; sched_bkup(){ pgo create schedule --schedule="0 6 * * 0" --schedule-type=pgbackrest --pgbackrest-backup-type=full --schedule-opts="--repo1-retention-full=1" $1; }; sched_bkup sas-crunchy-data-postgres; sched_bkup sas-crunchy-data-cdspostgres;

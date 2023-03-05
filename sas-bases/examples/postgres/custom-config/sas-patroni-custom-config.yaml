@@ -1,0 +1,18 @@
+# Example sas-crunchy-data-postgres-patroni-config when default to SAS Provided Postgres custom configuration.
+#   - Set on your Kubernetes cluster.
+#   - Internal PostgreSQL only.
+#
+#   - For Patroni syntax refer to documention and web link is below 
+#     https://access.crunchydata.com/documentation/patroni/latest/settings/index.html#settings
+#
+#   - The provided values are baseline defaults, make changes as needed.
+#
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sas-crunchy-data-postgres-patroni-config
+data:
+  loop_wait: "10"
+  ttl: "30"
+  master_start_timeout: "0"
+  retry_timeout: "10"

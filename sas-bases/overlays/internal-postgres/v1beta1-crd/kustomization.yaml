@@ -1,0 +1,5 @@
+resources:
+- pgclusters-crd.yaml
+- pgpolicies-crd.yaml
+- pgreplicas-crd.yaml
+- pgtasks-crd.yaml

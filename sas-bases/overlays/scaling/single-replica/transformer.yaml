@@ -1,0 +1,60 @@
+---
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: ss-node-count
+patch: |-
+    - op: replace
+      path: /spec/replicas
+      value:
+        1
+target:
+  group: apps
+  kind: StatefulSet
+  version: v1
+#This is where the consul bootstrap expect value is, ordinally.
+---
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: consul-cluster-node-count
+patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/env/0/value
+      value:
+        "1"
+target:
+  group: apps
+  kind: StatefulSet
+  annotationselector: sas.com/component-name in (sas-consul-server)
+  version: v1
+---
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: cacheserver-cluster-node-count
+patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/env/5/value
+      value:
+        "1"
+target:
+  group: apps
+  kind: StatefulSet
+  annotationselector: sas.com/component-name in (sas-cacheserver)
+  version: v1
+---
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: postgres-replicas-transformer
+patch: |-
+   - op: replace
+     path: /spec/replicas
+     value: "0"
+target:
+  group: crunchydata.com
+  kind: Pgcluster
+  name: .*
+  version: v1
+

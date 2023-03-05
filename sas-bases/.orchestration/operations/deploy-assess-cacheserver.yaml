@@ -1,0 +1,29 @@
+apiVersion: orchestration.sas.com/v2beta10
+kind: LifecycleOperation
+metadata:
+  annotations:
+    sas.com/component-name: sas-cacheserver
+    sas.com/component-version: 1.30.5-20221103.1667487495149
+  creationTimestamp: null
+  labels:
+    participate.lifecycle.sas.com/deploy-assess: "true"
+  name: deploy-assess-cacheserver
+spec:
+  args:
+  - name: namespace
+  - name: manifest
+  steps:
+  - args:
+    - deploy-assess-cacheserver-execute
+    - --namespace
+    - $namespace
+    cmd: run
+    when: |-
+      (and
+        (.ManifestResource $manifest (((((.NewManifestResourcesIterationSpec).WithGroup "apps").WithVersion "v1").WithKind "StatefulSet").WithName "sas-cacheserver"))
+        (.ClusterResource ((((((.NewClusterResourcesIterationSpec).WithNamespace $namespace).WithGroup "apps").WithVersion "v1").WithResource "statefulset").WithName "sas-cacheserver"))
+        (ne
+          (.Annotation "sas.com/component-version" (.ManifestResource $manifest (((((.NewManifestResourcesIterationSpec).WithGroup "apps").WithVersion "v1").WithKind "StatefulSet").WithName "sas-cacheserver")))
+          (.Annotation "sas.com/component-version" (.ClusterResource ((((((.NewClusterResourcesIterationSpec).WithNamespace $namespace).WithGroup "apps").WithVersion "v1").WithResource "statefulset").WithName "sas-cacheserver")))
+        )
+      )

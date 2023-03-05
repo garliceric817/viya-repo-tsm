@@ -1,0 +1,23 @@
+apiVersion: orchestration.sas.com/v2beta10
+kind: LifecycleOperation
+metadata:
+  annotations:
+    sas.com/component-name: sas-cachelocator
+    sas.com/component-version: 1.30.5-20221103.1667487469808
+  creationTimestamp: null
+  labels:
+    participate.lifecycle.sas.com/deploy-pre: "true"
+  name: deploy-pre-cachelocator
+spec:
+  args:
+  - name: namespace
+  - name: timeout
+  steps:
+  - args:
+    - deploy-pre-cachelocator-execute
+    - --namespace
+    - $namespace
+    - --timeout
+    - $timeout
+    cmd: run
+    when: (eq (.GetVariable "sas.com/sas-cachelocator-update") "true")

@@ -1,0 +1,160 @@
+namespace: viya4deploy
+resources:
+- sas-bases/base
+- sas-bases/overlays/network/networking.k8s.io 
+  #- sas-bases/overlays/network/istio
+- site-config/resources/openssl-generated-ingress-certificate.yaml
+- sas-bases/overlays/cas-server
+- sas-bases/overlays/internal-postgres
+#- site-config/pgo-client
+# If your deployment contains programming-only offerings only, comment out the next line
+- sas-bases/overlays/internal-elasticsearch
+- sas-bases/overlays/update-checker
+  #- sas-bases/overlays/cas-server/auto-resources 
+- site-config/sas-microanalytic-store/astores/resources.yaml
+  #- site-config/resources/sas-patroni-custom-config.yaml
+#- site-config/sas-model-publish/kaniko
+#- sas-bases/overlays/sas-workload-orchestrator
+  ## Python
+  #- site-config/sas-open-source-config/python
+- site-config/state-transfer  
+configurations:
+- sas-bases/overlays/required/kustomizeconfig.yaml
+- site-config/configurations/compute-server-add-nfs-mount.yaml
+
+transformers:
+- site-config/transformers/cas-manage-workers.yaml ## only for MPP
+- site-config/transformers/cas-manage-backup.yaml  ## only for MPP
+- sas-bases/overlays/scaling/ha/enable-ha-transformer.yaml ## Only for MPP
+- sas-bases/overlays/internal-elasticsearch/sysctl-transformer.yaml
+- site-config/transformers/postgres-replicas-transformer.yaml
+## Customize for launcher
+- site-config/transformers/launcher-memory-requests-limits.yaml
+- site-config/transformers/launcher-user-process-limit.yaml
+- site-config/transformers/launcher-super-user-process-limit.yaml
+  #- site-config/transformers/sas-postgres-custom-config-transformer.yaml
+  ## Python
+  #- site-config/sas-open-source-config/python/python-transformer.yaml
+- sas-bases/overlays/startup/ordered-startup-transformer.yaml
+- sas-bases/overlays/required/transformers.yaml
+- site-config/transformers/mirror.yaml
+- sas-bases/overlays/cas-server/auto-resources/remove-resources.yaml 
+- sas-bases/overlays/internal-elasticsearch/internal-elasticsearch-transformer.yaml
+- sas-bases/overlays/sas-microanalytic-score/astores/astores-transformer.yaml
+- site-config/transformers/cas_disk_cache-config.yaml
+- site-config/transformers/cas-modify-pvc-storage.yaml
+#- sas-bases/overlays/sas-model-publish/kaniko/kaniko-transformer.yaml
+## For DB Connection
+#- site-config/data-access/data-mounts-cas.yaml
+#- site-config/data-access/data-mounts-deployment.yaml
+#- site-config/data-access/data-mounts-job.yaml
+#- site-config/transformers/cas-enable-external-services.yaml
+  #- site-config/transformers/cas-auto-restart.yaml
+- site-config/state-transfer/support-state-transfer.yaml
+- site-config/transformers/cas-manage-cpu-and-memory.yaml
+## Tuning memory
+- site-config/rabbitmq/rabbitmq-modify-memory.yaml
+# Increase user's launcher number limit
+#- site-config/sas-launcher/configure/launcher-user-process-limit.yaml
+
+# Mount information
+# - site-config/transformers/cas-add-host-mount.yaml
+#- site-config/transformers/launcher-nfs-mount.yaml
+## Test for modify memory
+#- site-config/transformers/modify_compute_resource.yaml
+#- site-config/transformers/modify_sasstudio_resource.yaml
+#- site-config/transformers/modify_sasstudioapp_resource.yaml
+
+## Access to DB
+#- sas-bases/overlays/data-access/data-env.yaml
+
+
+components:
+- sas-bases/components/security/core/base/front-door-tls 
+- sas-bases/components/security/network/networking.k8s.io/ingress/nginx.ingress.kubernetes.io/front-door-tls 
+#- sas-bases/components/security/core/base/front-door-tls
+#- sas-bases/components/security/network/networking.istio.io/virtualservice/front-door-tls
+
+patches:
+- path: site-config/patches/storageclass.yaml 
+  target:
+    kind: PersistentVolumeClaim
+    annotationSelector: sas.com/component-name in (sas-backup-job,sas-data-quality-services,sas-commonfiles,sas-cas-operator,sas-pyconfig)
+    #- path: site-config/configurations/compute-server-add-nfs-mount.yaml
+    #  target:
+    #  name: sas-compute-job-config
+    #  version: v1
+    #  kind: PodTemplate
+    #- path: site-config/compute-server-annotate-podtempate.yaml
+    #target:
+    #  name: sas-compute-job-config
+    #   version: v1
+    #  kind: PodTemplate
+
+# License information
+#secretGenerator:
+# - name: sas-license
+#   type: sas.com/license
+#   behavior: merge
+#   files:
+#   - SAS_LICENSE=license.jwt
+
+configMapGenerator:
+## Ingress
+- name: ingress-input
+  behavior: merge
+  literals:
+  - INGRESS_HOST=tksviya.unx.sas.com
+  
+## Image registry url
+- name: input 
+  behavior: merge
+  literals:
+  - IMAGE_REGISTRY=twnscaregistry.twn.sashq-d.openstack.sas.com:5000/sasdeploy
+
+## SAS Service URL
+- name: sas-shared-config
+  behavior: merge
+  literals:
+  - SAS_SERVICES_URL=http://tksviya.unx.sas.com/
+
+## Sitedefault setting
+- name: sas-consul-config
+  behavior: merge
+  files:
+    - SITEDEFAULT_CONF=site-config/configMapGenerator/sitedefault.yaml
+
+## Access to DB
+#- name: sas-access-config
+#  behavior: merge
+#  envs:
+#  - site-config/data-access/sas-access.properties
+
+## pgo
+#- name: pgo-command
+#  behavior: merge
+#  literals:
+#  - pgo-sub-command=pgo status sas-crunchy-data-postgres
+  #- pgo-sub-command=pgo test sas-crunchy-data-postgres
+  #- pgo-sub-command=pgo failover --query sas-crunchy-data-postgres
+  #- pgo-sub-command=pgo show user sas-crunchy-data-postgres
+  #- pgo-sub-command=yes|pgo restart sas-crunchy-data-postgres
+  #- pgo-sub-command=yes|pgo scale --replica-count 1 sas-crunchy-data-postgres
+  #- pgo-sub-command=yes|pgo update cluster --shutdown sas-crunchy-data-postgres
+  #- pgo-sub-command=yes|pgo update cluster --startup sas-crunchy-data-postgres
+  #- pgo-sub-command=pgo backup sas-crunchy-data-postgres --backup-type pgdump --database SharedServices --pvc-name sas-crunchy-data-postgres-dump-pvc
+  #- pgo-sub-command=yes|pgo restore sas-crunchy-data-postgres --backup-type pgdump --pgdump-database SharedServices --backup-pvc sas-crunchy-data-postgres-dump-pvc
+
+## Secret generator (output from above cmd)
+secretGenerator:
+  - name: sas-image-pull-secrets
+    behavior: replace
+    type: kubernetes.io/dockerconfigjson
+    literals:
+      - '.dockerconfigjson={"auths":{"twnscaregistry.twn.sashq-d.openstack.sas.com:5000/sasdeploy":{"username":"sas","password":"Orion123","email":"stacey.chan@sas.com","auth":"c2FzOk9yaW9uMTIz"}}}'
+  - name: sas-license
+    type: sas.com/license
+    behavior: merge
+    files:
+    - SAS_LICENSE=SASViyaV4_0B6D19_lts_2022.09_license_2023-01-19T085005.jwt
+

@@ -1,0 +1,6 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- v1-crd                     # overlay provided by sas-crunchy-data-postgres-operator deployable unit
+- crunchydata                     # overlay provided by sas-crunchy-data-postgres-operator deployable unit
+- platform-postgres

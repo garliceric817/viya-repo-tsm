@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <link rel="stylesheet" type="text/css" href="sas.css"/>
+        <title>Administrative Tool for an Internal Instance of PostgreSQL</title>
+    </head>
+    <body>
+        <h1 id="139933133634720administrative-tool-for-an-internal-instance-of-postgresql">Administrative Tool for an Internal Instance of PostgreSQL</h1>
+<h2 id="139933133634720overview">Overview</h2>
+<p>If you have an internal instance of PostgreSQL, SAS Viya provides a web-based
+administration tool, <a href="https://www.pgadmin.org/">pgAdmin</a>. The pgAdmin tool is
+optional and only provides additional functionality.</p>
+<h2 id="139933133634720installation">Installation</h2>
+<p>To use this tool, add the following overlay to
+your base kustomization.yaml (<code>$deploy/kustomization.yaml</code>):</p>
+<pre class="highlight"><code class="language-yaml">resources:
+- sas-bases/overlays/crunchydata_pgadmin</code></pre>
+
+<h2 id="139933133634720additional-resources">Additional Resources</h2>
+<p>For information about how to use pgAdmin and the YAML file associated with it,
+see &ldquo;sas-crunchy-data-pgadmin&rdquo; in
+<a href="http://documentation.sas.com/?cdcId=itopscdc&amp;cdcVersion=default&amp;docsetId=dplyml0phy0dkr&amp;docsetTarget=p1wcj9amr4g8rfn1ko78an3cbe3n.htm&amp;locale=en#p10nrpab7kuxufn1u5z8soh3ba4r">SAS Viya Deployment Guide</a></p>
+<p>For more information about internal and external instances of PostgreSQL, see
+&ldquo;Internal versus External PostgreSQL Instances&rdquo; in
+<a href="http://documentation.sas.com/?cdcId=itopscdc&amp;cdcVersion=default&amp;docsetId=itopssr&amp;docsetTarget=n1rbbuql9epqa0n1pg3bvfx3dmvc.htm&amp;locale=en">SAS Viya Deployment Guide</a></p>
+    </body>
+</html>

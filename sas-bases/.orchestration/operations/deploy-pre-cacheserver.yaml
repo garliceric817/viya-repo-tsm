@@ -1,0 +1,23 @@
+apiVersion: orchestration.sas.com/v2beta10
+kind: LifecycleOperation
+metadata:
+  annotations:
+    sas.com/component-name: sas-cacheserver
+    sas.com/component-version: 1.30.5-20221103.1667487495149
+  creationTimestamp: null
+  labels:
+    participate.lifecycle.sas.com/deploy-pre: "true"
+  name: deploy-pre-cacheserver
+spec:
+  args:
+  - name: namespace
+  - name: timeout
+  steps:
+  - args:
+    - deploy-pre-cacheserver-execute
+    - --namespace
+    - $namespace
+    - --timeout
+    - $timeout
+    cmd: run
+    when: (eq (.GetVariable "sas.com/sas-cacheserver-update") "true")

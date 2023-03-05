@@ -1,0 +1,19 @@
+#
+# Example cdspatroni-custom-config-transformer to override Postgres configuration on your Kubernetes cluster.
+#   - Please refer to README.md for more information on setting Postgres custom config.
+#   - Internal PostgreSQL only.
+#   - This transformer does not apply if you opted for an external PostgreSQL instance.
+#
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: cdspatroni-custom-config-transformer
+patch: |-
+   - op: replace
+     path: /spec/patroniconf
+     value: sas-crunchy-data-cdspostgres-patroni-config
+target:
+  group: webinfdsvr.sas.com
+  kind: Pgcluster
+  name: sas-crunchy-data-cdspostgres
+  version: v1

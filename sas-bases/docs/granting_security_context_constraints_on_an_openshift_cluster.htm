@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <link rel="stylesheet" type="text/css" href="sas.css"/>
+        <title>Granting Security Context Constraints on an OpenShift Cluster</title>
+    </head>
+    <body>
+        <h1 id="139933133635056granting-security-context-constraints-on-an-openshift-cluster">Granting Security Context Constraints on an OpenShift Cluster</h1>
+<h2 id="139933133635056overview">Overview</h2>
+<p>The <code>$deploy/sas-bases/examples/crunchydata/openshift</code> directory contains files to grant Security Context Constraints (SCCs) for fsgroup 26 and 2000 on an OpenShift cluster. A Kubernetes cluster administrator should add these SCCs to their OpenShift cluster prior to deploying SAS Viya.</p>
+<h2 id="139933133635056installation">Installation</h2>
+<ol>
+<li>As a Kubernetes cluster administrator of the OpenShift cluster, use one of the following sets of commands to apply the SCCs.</li>
+</ol>
+<pre class="highlight"><code class="language-sh"># using kubectl
+kubectl apply -f pgo-scc.yaml
+kubectl apply -f pgo-backrest-scc.yaml
+
+# using the OpenShift CLI
+oc create -f pgo-scc.yaml
+oc create -f pgo-backrest-scc.yaml</code></pre>
+
+<ol>
+<li>Use the following commands to link the SCCs to Kubernetes ServiceAccounts. Replace the entire variable {{ NAME-OF-NAMESPACE }}, including the braces, with the Kubernetes namespace used for SAS Viya.</li>
+</ol>
+<pre class="highlight"><code class="language-sh">oc -n {{ NAME-OF-NAMESPACE }} adm policy add-scc-to-user pgo -z pgo-pg
+oc -n {{ NAME-OF-NAMESPACE }} adm policy add-scc-to-user pgo -z pgo-target
+oc -n {{ NAME-OF-NAMESPACE }} adm policy add-scc-to-user pgo-backrest -z pgo-backrest
+oc -n {{ NAME-OF-NAMESPACE }} adm policy add-scc-to-user pgo-backrest -z pgo-default</code></pre>
+    </body>
+</html>

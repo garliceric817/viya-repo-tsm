@@ -1,0 +1,224 @@
+apiVersion: orchestration.sas.com/v2beta7
+kind: LifecycleOperation
+metadata:
+  annotations:
+    sas.com/component-name: sas-k8s-common
+    sas.com/component-version: 2.56.2-20220919.1663599580201
+  creationTimestamp: null
+  name: stop-all-execute
+spec:
+  args:
+  - name: namespace
+  - default: 7200s
+    name: timeout
+  steps:
+  - args:
+    - scale
+    - --namespace
+    - $namespace
+    - deployments
+    - --replicas
+    - "0"
+    - --selector
+    - sas.com/deployment=sas-viya,!sas.com/zero-scale-phase
+    cmd: kubectl
+  - args:
+    - scale
+    - --namespace
+    - $namespace
+    - statefulsets
+    - --replicas
+    - "0"
+    - --selector
+    - sas.com/deployment=sas-viya,!sas.com/zero-scale-phase
+    cmd: kubectl
+  - args:
+    - patch
+    - --namespace
+    - $namespace
+    - cronjobs
+    - $resource.Name
+    - --patch
+    - '{"spec":{"suspend":true}}'
+    cmd: kubectl
+    withClusterResources:
+      group: batch
+      labelSelector: sas.com/deployment=sas-viya,!sas.com/zero-scale-phase
+      namespace: $namespace
+      resource: cronjobs
+  - args:
+    - patch
+    - --namespace
+    - $namespace
+    - cronjobs
+    - $resource.Name
+    - --patch
+    - '{"spec":{"suspend":true}}'
+    cmd: kubectl
+    withClusterResources:
+      group: batch
+      labelSelector: sas.com/deployment=sas-viya,!sas.com/zero-scale-phase
+      namespace: $namespace
+      resource: cronjobs
+  - args:
+    - patch
+    - --namespace
+    - $namespace
+    - casdeployments
+    - $resource.Name
+    - --type
+    - json
+    - --patch
+    - '[{"op":"replace", "path": "/spec/shutdown", "value":true}]'
+    cmd: kubectl
+    when: (.ClusterDefinitions (((.NewClusterDefinitionsIterationSpec).WithGroup "viya.sas.com").WithResource "casdeployments"))
+    withClusterResources:
+      group: viya.sas.com
+      labelSelector: sas.com/deployment=sas-viya,!sas.com/zero-scale-phase
+      namespace: $namespace
+      resource: casdeployments
+  - args:
+    - patch
+    - --namespace
+    - $namespace
+    - opendistroclusters
+    - $resource.Name
+    - --type
+    - json
+    - --patch
+    - '[{"op":"replace", "path": "/spec/shutdown", "value":true}]'
+    cmd: kubectl
+    when: (.ClusterDefinitions (((.NewClusterDefinitionsIterationSpec).WithGroup "opendistro.sas.com").WithResource "opendistroclusters"))
+    withClusterResources:
+      group: opendistro.sas.com
+      labelSelector: sas.com/deployment=sas-viya,!sas.com/zero-scale-phase
+      namespace: $namespace
+      resource: opendistroclusters
+  - args:
+    - patch
+    - --namespace
+    - $namespace
+    - daemonsets
+    - $resource.Name
+    - --patch
+    - '{"spec":{"template":{"spec":{"nodeSelector":{"sas.com/scale-class":"zero"}}}}}'
+    cmd: kubectl
+    withClusterResources:
+      group: apps
+      labelSelector: sas.com/deployment=sas-viya,!sas.com/zero-scale-phase
+      namespace: $namespace
+      resource: daemonsets
+  - args:
+    - patch
+    - --namespace
+    - $namespace
+    - pgclusters.webinfdsvr.sas.com
+    - $resource.Name
+    - --type
+    - json
+    - --patch
+    - '[{"op":"replace", "path": "/spec/shutdown", "value":true}]'
+    cmd: kubectl
+    when: (.ClusterDefinitions (((.NewClusterDefinitionsIterationSpec).WithGroup "webinfdsvr.sas.com").WithResource "pgclusters"))
+    withClusterResources:
+      group: webinfdsvr.sas.com
+      labelSelector: sas.com/deployment=sas-viya,!sas.com/zero-scale-phase
+      namespace: $namespace
+      resource: pgclusters
+  - args:
+    - patch
+    - --namespace
+    - $namespace
+    - distributedredisclusters
+    - $resource.Name
+    - --type
+    - json
+    - --patch
+    - '[{"op":"replace", "path": "/spec/shutdown", "value":true}]'
+    cmd: kubectl
+    when: (.ClusterDefinitions (((.NewClusterDefinitionsIterationSpec).WithGroup "redis.kun").WithResource "distributedredisclusters"))
+    withClusterResources:
+      group: redis.kun
+      labelSelector: sas.com/deployment=sas-viya,!sas.com/zero-scale-phase
+      namespace: $namespace
+      resource: distributedredisclusters
+  - args:
+    - delete
+    - --namespace
+    - $namespace
+    - --wait
+    - --timeout
+    - $timeout
+    - --ignore-not-found
+    - espserver
+    - --all
+    cmd: kubectl
+    when: (.ClusterDefinitions (((.NewClusterDefinitionsIterationSpec).WithGroup "iot.sas.com").WithResource "espservers"))
+  - args:
+    - wait
+    - --namespace
+    - $namespace
+    - --for
+    - delete
+    - pod
+    - --selector
+    - app.kubernetes.io/managed-by=sas-cas-operator
+    - --timeout
+    - $timeout
+    cmd: kubectl
+  - args:
+    - wait
+    - --namespace
+    - $namespace
+    - --for
+    - delete
+    - pod
+    - --selector
+    - vendor=crunchydata,role
+    - --timeout
+    - $timeout
+    cmd: kubectl
+  - args:
+    - wait
+    - --namespace
+    - $namespace
+    - --for
+    - delete
+    - pod
+    - --selector
+    - managed-by=redis-cluster-operator
+    - --timeout
+    - $timeout
+    cmd: kubectl
+  - args:
+    - --namespace
+    - $namespace
+    - delete
+    - job
+    - --selector
+    - sas.com/created-by=sas-launcher
+    - --wait
+    - --timeout
+    - $timeout
+    cmd: kubectl
+  - args:
+    - --namespace
+    - $namespace
+    - delete
+    - pod
+    - --selector
+    - sas.com/created-by=sas-launcher
+    - --wait
+    - --timeout
+    - $timeout
+    cmd: kubectl
+  - args:
+    - scale
+    - --namespace
+    - $namespace
+    - deployments
+    - --replicas
+    - "0"
+    - --selector
+    - sas.com/deployment=sas-viya,sas.com/zero-scale-phase=1
+    cmd: kubectl

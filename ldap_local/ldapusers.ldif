@@ -1,0 +1,56 @@
+dn: uid=Stacey,ou=people,dc=ec2,dc=internal
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: posixAccount
+objectClass: person
+objectClass: top
+cn: Stacey
+gidNumber: 1001
+sn: SASTW
+displayName: Stacey Chan
+givenName: Stacey
+l: Taipei
+mail: stacey.chan@sas.com
+o: SASTW
+uid: stacey
+uidNumber: 1001
+homeDirectory: /home/stacey
+userPassword: demopw
+
+dn: uid=Rock,ou=people,dc=ec2,dc=internal
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: posixAccount
+objectClass: person
+objectClass: top
+cn: Rock
+gidNumber: 1001
+sn: SASTW
+displayName: Rock Kuo
+givenName: Rock
+l: Taipei
+mail: Rock.Kuo@sas.com
+o: SASTW
+uid: Rock
+uidNumber: 1002
+homeDirectory: /home/Rock
+userPassword: demopw
+
+dn: uid=Lichia,ou=people,dc=ec2,dc=internal
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: posixAccount
+objectClass: person
+objectClass: top
+cn: Lichia
+gidNumber: 1001
+sn: SASTW
+displayName: Lichia Kuo
+givenName: Lichia
+l: Taipei
+mail: Lichia.Kuo@sas.com
+o: SASTW
+uid: Lichia
+uidNumber: 1003
+homeDirectory: /home/Lichia
+userPassword: demopw

@@ -1,0 +1,24 @@
+#
+# NOTE:
+#  - The following is an example of a configMap to add values to the pg_hba.conf.
+#  - This is *NOT* required. Only use this if you wish to add extra values. 
+#  - This file is additive and cannot be used to remove pg_hba lines created by SAS by default.
+#  - Internal PostgreSQL only.
+#
+#  - See https://postgresql.org/docs/current/auth-pg-hba-conf.html for more info on
+#    how pg_hba.conf works.
+#
+#  - The names of the keys in the configMap are ignored. Only the values are considered.
+#    Use the keys to describe what each pg_hba entry is adding for documentation purposes.
+#
+#  - This example shows a configMap which will add a new line to require a SSL connection
+#    using scram-sha-256 for all connections from local host.
+#
+#  - This is *NOT* a recommendation to add this, this is just for demonstration purposes.
+#
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-override-pg-hba-conf
+data:
+  require_ssl_for_127001: hostssl all all 127.0.0.1/0 scram-sha-256

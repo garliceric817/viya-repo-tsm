@@ -1,0 +1,20 @@
+apiVersion: orchestration.sas.com/v2beta5
+kind: LifecycleOperation
+metadata:
+  annotations:
+    sas.com/component-name: sas-rabbitmq-server
+    sas.com/component-version: 3.821003.16-20221103.1667496983589
+  creationTimestamp: null
+  name: deploy-assess-rabbitmq-execute
+spec:
+  args:
+  - name: namespace
+  steps:
+  - args:
+    - annotate
+    - --namespace
+    - $namespace
+    - configmap
+    - sas-deploy-lifecycle-operation-variables
+    - sas.com/sas-rabbitmq-server-update=true
+    cmd: kubectl

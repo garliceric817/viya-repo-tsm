@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <link rel="stylesheet" type="text/css" href="sas.css"/>
+        <title>Configure PostgreSQL</title>
+    </head>
+    <body>
+        <h1 id="139933133257408configure-postgresql">Configure PostgreSQL</h1>
+<h2 id="139933133257408overview">Overview</h2>
+<p>SAS Viya provides two options for your PostgreSQL server: an internal instance
+provided by SAS or an external PostgreSQL that you would like SAS Viya to
+utilize. So, before deploying you must select which of these options you would
+like to use for your SAS Viya deployment. If you follow the instructions in the
+SAS Viya Deployment Guide, the deployment includes an internal instance of
+PostgreSQL.</p>
+<p>Before configuring PostgreSQL, you should be aware of the TLS configuration
+you plan to use for your SAS Viya deployment. For more information about TLS,
+see the &ldquo;Configure Network Security and Encryption Using SAS Security
+Certificate Framework&rdquo; README file at <code>$deploy/sas-bases/examples/security/README.md</code>
+(for Markdown format) and <code>$deploy/sas-bases/docs/configure_network_security_and_encryption_using_sas_security_certificate_framework.htm</code> (for HTML format).</p>
+<p>This README also describes how to deploy Common Data Store or CDS PostgreSQL. CDS PostgreSQL is an additional PostgreSQL cluster that some services in your SAS Viya deployment may want to utilize, providing a second database that can be configured separately from the default PostgreSQL cluster.</p>
+<h2 id="139933133257408pgcluster-customresource">Pgcluster CustomResource</h2>
+<p>You can add PostgreSQL servers to SAS Viya via the Pgcluster.webinfdsvr
+<a href="https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/">CustomResource</a>.
+This CustomResouce can be configured to create an internal PostgreSQL cluster,
+managed by SAS via
+<a href="https://www.crunchydata.com/">Crunchy Data</a>
+or an external PostgreSQL cluster (such as an Azure Database or Amazon RDS)
+managed by the customer.</p>
+<p>The default PostgreSQL cluster (used by most micro-services) in SAS Viya is
+called <code>sas-crunchy-data-postgres</code> and is an internally managed PostgreSQL
+cluster. SAS Viya can handle multiple PostgreSQL servers at once but only
+specific micro-services can make use of servers besides the default. Consult the
+documentation for your order to see if you have products that require their own
+PostgreSQL in addition to the default.</p>
+<p>The <code>$deploy/sas-bases/examples/postgres/configure</code> directory contains example
+files used to manage external PostgreSQL servers via the Pgcluster
+CustomResource.</p>
+<p>To view the Pgcluster.webinfdsvr CustomResources in your SAS Viya deployment,
+you may run the following command.</p>
+<pre class="highlight"><code class="language-bash">kubectl get pgcluster.webinfdsvr.sas.com -n {{ NAMESPACE }}</code></pre>
+
+<p>If you have configured a Pgcluster.webinfdsvr CustomResource to create an
+internal PostgreSQL cluster, there will also be a Pgcluster.crunchydata
+CustomResource provided by Crunchy Data. Run the following command to view the
+Pgcluster.crunchydata CustomResources in your SAS Viya deployment.</p>
+<pre class="highlight"><code class="language-bash">kubectl get pgcluster.crunchydata.com -n {{ NAMESPACE }}</code></pre>
+
+<h2 id="139933133257408internal-postgresql">Internal PostgreSQL</h2>
+<p>Internal instances of PostgreSQL use the
+<a href="https://github.com/crunchydata">PostgreSQL Operator and Containers</a>
+provided by <a href="https://www.crunchydata.com/">Crunchy Data</a>
+behind the scenes to create the PostgreSQL cluster. The Crunchy Data operator is
+<em>not</em> included in your deployment by default (to save resources in case you
+use an external instance of PostgreSQL), so it will need to be added via a Kustomize
+overlay.</p>
+<ol>
+<li>
+<p>Go to the base kustomization.yaml file (<code>$deploy/kustomization.yaml</code>). In the
+resources block of that file, add the following content, including adding the
+block if it doesn&rsquo;t already exist:</p>
+<pre class="highlight"><code class="language-yaml">resources:
+- sas-bases/overlays/internal-postgres</code></pre>
+
+</li>
+<li>
+<p>Copy the content of <code>$deploy/sas-bases/examples/configure-postgres/internal/pgo-client</code> into a new subdirectory in <code>$deploy/site-config</code>, such as <code>$deploy/site-config/configure-postgres/internal/pgo-client</code>. Add the sub-directory that you&rsquo;ve just copied to the resources block of your base kustomization.yaml file. For instance, if you copied the file to $deploy/site-config/configure-postgres/internal/pgo-client, your kustomization.yaml file would look like this:</p>
+<pre class="highlight"><code class="language-yaml">resources:
+...
+- site-config/configure-postgres/internal/pgo-client</code></pre>
+
+</li>
+<li>
+<p>Evaluate the pgo command string in the configMapGenerator block of the kustomization file in the folder you just copied (not the base kustomization.yaml file 
+but <code>$deploy/site-config/configure-postgres/internal/pgo-client/kustomization.yaml</code> in the example above). 
+The pgo command string in the block sets up a scheduled PostgreSQL pgBackRest backup that executes
+every Sunday at 06:00 UTC. The string backs up both sas-crunchy-data-postgres and
+sas-crunchy-data-cdspostgres clusters and includes a retention policy. If you want to
+change the backup time, specify your own time in UTC. If your deployment does not include
+sas-crunchy-data-cdspostgres, remove the function call sched_bkup sas-crunchy-data-cdspostgres
+from the string.</p>
+</li>
+</ol>
+<p>This customization includes the Crunchy Data operator, as well as the
+CustomResource for the default <code>sas-crunchy-data-postgres</code> cluster, in your
+SAS Viya deployment. The default cluster has been tuned to work well with SAS
+Viya, but it can be adjusted via Kustomize transformers if desired.</p>
+<p>Continue your SAS Viya deployment as documented in the
+<a href="http://documentation.sas.com/?cdcId=itopscdc&amp;cdcVersion=default&amp;docsetId=dplyml0phy0dkr&amp;docsetTarget=titlepage.htm">SAS Viya Deployment Guide</a></p>
+<h3 id="139933133257408customize-internal-postgresql">Customize Internal PostgreSQL</h3>
+<p>If you want to customize your internal PostgreSQL clusters, follow the steps in
+the &ldquo;Configuration Settings for PostgreSQL Database Cluster&rdquo; README located at
+<code>$deploy/sas-bases/examples/postgres/custom-config/README.md</code> (for Markdown
+format) or <code>$deploy/sas-bases/docs/configuration_settings_for_postgresql_database_cluster.htm</code>
+(for HTML format).</p>
+<h2 id="139933133257408external-postgresql">External PostgreSQL</h2>
+<p>If you decide to use an external instance of PostgreSQL, you must provide a Pgcluster
+CustomResource describing your external cluster to SAS. This can be done using
+the base kustomization.yaml file (<code>$deploy/kustomization.yaml</code>).</p>
+<ol>
+<li>
+<p>Copy <code>$deploy/sas-bases/examples/postgres/configure/external-postgres.yaml</code>
+to a new directory, such as <code>$deploy/site-config/external-postgres.yaml</code>.</p>
+</li>
+<li>
+<p>Adjust the values in the copied file as necessary for your external
+PostgreSQL instance.</p>
+</li>
+<li>
+<p>Update the base kustomization.yaml file (<code>$deploy/kustomization.yaml</code>) by
+adding the following content to the resources and transformers blocks of that
+file, including adding the blocks if they do not already exist:</p>
+<pre class="highlight"><code class="language-yaml">resources:
+- site-config/external-postgres.yaml</code></pre>
+
+<pre class="highlight"><code class="language-yaml">transformers:
+- sas-bases/overlays/external-postgres/external-postgres-transformer.yaml</code></pre>
+
+</li>
+<li>
+<p>Continue your SAS Viya deployment as documented in the
+<a href="http://documentation.sas.com/?cdcId=itopscdc&amp;cdcVersion=default&amp;docsetId=dplyml0phy0dkr&amp;docsetTarget=titlepage.htm">SAS Viya Deployment Guide</a></p>
+</li>
+</ol>
+<h3 id="139933133257408additional-external-postgresql-clusters">Additional External PostgreSQL Clusters</h3>
+<p>If you want to include additional external PostgreSQL clusters besides the
+default created above, follow the same steps performed
+in the previous section, using a new file for each external cluster.</p>
+<p>Ensure that <em>only one</em> external PostgreSQL resource has the
+<code>sas.com/default-database</code> annotation. Otherwise you will have multiple external
+PostgreSQL fighting to be considered the &ldquo;default&rdquo; database, which can cause
+issues.</p>
+<h3 id="139933133257408setting-a-custom-database-name-for-an-external-database">Setting a Custom Database Name for an External Database</h3>
+<p>By default, the database name is set to <code>SharedServices</code> in the Pgcluster
+Custom Resource files, <code>$deploy/sas-bases/examples/postgres/configure/external-postgres.yaml</code>
+and <code>$deploy/sas-bases/examples/postgres/configure/external-cdspostgres.yaml</code>.</p>
+<pre class="highlight"><code class="language-yaml">spec:
+...
+  database: SharedServices</code></pre>
+
+<p>Custom names for external databases are supported, but if you have an instance of
+CDS PostgreSQL, then the database name must match the PostgreSQL
+database name. For example, if you change the name of the CDS PostgreSQL
+database in the external-cdspostgres.yaml file to
+&ldquo;vmartSharedServicesProd&rdquo;, you must change the name of the PostgreSQL database
+to &ldquo;vmartSharedServicesProd&rdquo; in external-postgres.yaml.</p>
+<p><strong>Note:</strong> Ensure you name the databases correctly, when you create them up front.</p>
+<h3 id="139933133257408google-cloud-platform-cloud-sql-for-postgresql-prerequisites">Google Cloud Platform Cloud SQL for PostgreSQL Prerequisites</h3>
+<p>SAS requires that you access your Cloud SQL for PostgreSQL server via the Cloud SQL Proxy. For information regarding the configuration of a Cloud SQL Proxy, see the relevant Google documentation.</p>
+<p>All SAS Viya database communication should be directed to a Cloud SQL Proxy client that is deployed in the same namespace that hosts SAS Viya. This ensures that data is encrypted prior to traveling outside the virtual network in the namespace. The Cloud SQL Proxy client is reachable via its service name.</p>
+<h3 id="139933133257408security-considerations">Security Considerations</h3>
+<p>SAS strongly recommends the use of SSL/TLS to secure data in transit. You should follow the documented best practices provided by your cloud platform provider for securing access to your database using SSL/TLS. Securing your database server with SSL/TLS entails the use of certificates. Upon securing your database server, your cloud platform provider may provide you with a server CA certificate. In order for SAS Viya to connect directly to a secure database server, you must provide the server CA certificate to SAS Viya prior to deployment. Failing to configure SAS Viya to trust the database server CA certificate results in &ldquo;Connection refused&rdquo; errors or in communications falling back to insecure modes. For instructions on how to provide CA certificates to SAS Viya, see the section labeled &ldquo;Incorporating Additional CA Certificates into the SAS Viya Deployment&rdquo; in the README file at <code>$deploy/sas-bases/examples/security/README.md</code> (for Markdown format) or at <code>$deploy/sas-bases/docs/configure_network_security_and_encryption_using_sas_security_certificate_framework.htm</code> (for HTML format).</p>
+<p>When using an SQL proxy for database communication, it might be possible to secure database communication in accordance with the cloud platform vendor&rsquo;s best practices without the need to import your database server CA certificate. Some cloud platforms, such as the Google Cloud Platform, allow the use of a proxy server to connect to the database server indirectly in a manner similar to a VPN tunnel. These platform-provided SQL proxy servers obtain certificates directly from the cloud platform. In this case, a database server CA certificate is obtained automatically by the proxy and you do not need to provide it during deployment. To find out more about SQL proxy connections to the database server, consult your cloud provider&rsquo;s documentation.</p>
+<h4 id="139933133257408security-considerations-on-google-cloud-platform">Security Considerations on Google Cloud Platform</h4>
+<p>If you are using Google Cloud SQL for PostgreSQL, the following steps are required.</p>
+<ol>
+<li>
+<p>Copy the file <code>$deploy/sas-bases/examples/postgres/configure/cloud-sql-proxy.yaml</code>
+to your <code>$deploy/site-config/resources/</code> directory. Follow the instructions provided in the file&rsquo;s comments to insert the necessary values.</p>
+</li>
+<li>
+<p>Include the <code>cloud-sql-proxy.yaml</code> file in the resources block of your base kustomization.yaml file (<code>$deploy/kustomization.yaml</code>). Here is an example:</p>
+<pre class="highlight"><code class="language-yaml">resources:
+- site-config/resources/cloud-sql-proxy.yaml</code></pre>
+
+</li>
+<li>
+<p>The Google Cloud SQL Proxy requires a Google Service Account Key. It retrieves this key from a Kubernetes Secret. To create this secret you must place the Service Account Key required by the Google sql-proxy in the file <code>$deploy/site-config/ServiceAccountKey.json</code> (in JSON format).</p>
+</li>
+<li>
+<p>Add <code>$deploy/sas-bases/overlays/external-postgres/service-account-key-secret.yaml</code> to the generators block of your base kustomization.yaml file (<code>$deploy/kustomization.yaml</code>). Create the generators block if it does not already exist. Here is an example:</p>
+<pre class="highlight"><code class="language-yaml">generators:
+...
+- sas-bases/overlays/external-postgres/service-account-key-secret.yaml</code></pre>
+
+</li>
+<li>
+<p>The file <code>$deploy/sas-bases/overlays/external-postgres/googlecloud-full-stack-tls-transformer.yaml</code> allows database clients and the sql-proxy pod to communicate in clear text. This transformer must be added after all other security transformers.</p>
+<pre class="highlight"><code class="language-yaml">transformers:
+...
+- sas-bases/overlays/external-postgres/googlecloud-full-stack-tls-transformer.yaml</code></pre>
+
+</li>
+</ol>
+<h2 id="139933133257408common-data-store-cds-postgresql">Common Data Store (CDS) PostgreSQL</h2>
+<p>The CDS PostgreSQL cluster is configured in a similar approach to the default PostgreSQL cluster described above. While it may be deployed either internally or externally, SAS does not support a hybrid of internal and external PostgreSQL. Follow the instructions below to setup CDS PostgreSQL, following the same decision you made for the default PostgreSQL cluster.</p>
+<h3 id="139933133257408internal-cds-postgresql">Internal CDS PostgreSQL</h3>
+<p>Go to the base kustomization.yaml file (<code>$deploy/kustomization.yaml</code>). In the resources block of that file, add the following content, including adding the block if it doesn&rsquo;t already exist:</p>
+<pre class="highlight"><code class="language-yaml">resources:
+- sas-bases/overlays/internal-postgres/cdspostgres</code></pre>
+
+<h3 id="139933133257408external-cds-postgresql">External CDS PostgreSQL</h3>
+<ol>
+<li>
+<p>Copy <code>$deploy/sas-bases/examples/postgres/configure/external-cdspostgres.yaml</code> to a new directory, such as <code>$deploy/site-config/external-cdspostgres.yaml</code>.</p>
+</li>
+<li>
+<p>Adjust the values in the copied file as necessary for your external CDS PostgreSQL instance.</p>
+</li>
+<li>
+<p>Update the base kustomization.yaml file (<code>$deploy/kustomization.yaml</code>) by adding the following content to the resources and transformers blocks of that file, including adding the blocks if they do not already exist:</p>
+</li>
+</ol>
+<pre class="highlight"><code class="language-yaml">resources:
+- site-config/external-cdspostgres.yaml</code></pre>
+
+<h2 id="139933133257408pgcluster-customresourcedefinition">Pgcluster CustomResourceDefinition</h2>
+<p>The following are all the fields accepted by the Pgcluster.webinfdsvr
+CustomResource. Note that many fields are conditionally required based on
+whether you are using internal or external instances of PostgreSQL. These
+fields are called out in the comments.</p>
+<p>The definition below contains a &lsquo;default-database&rsquo; annotation. If you add
+additional PostgreSQL clusters, take care to <em>NOT</em> set this value for
+any of them. By default, SAS Viya comes with a database marked with this
+annotation. Having multiple Pgcluster resources with this annotation will
+cause them to fight over which is the default and could result in your data
+getting split between two PostgreSQL clusters.</p>
+<p>Additionally, while the internal/external PostgreSQL flag can be set on each
+Pgcluster individually, SAS only supports all clusters being internal
+or all clusters being external. SAS does <em>not</em> support mixing external and
+internal PostgreSQL clusters in the same deployment.</p>
+<pre class="highlight"><code class="language-yaml">apiVersion: webinfdsvr.sas.com/v1
+kind: Pgcluster
+metadata:
+  annotations:
+    sas.com/default-database: "bool"   # Declares this is the default cluster. Only
+                                       # used for sas-crunchy-data-postgres.
+  name: string                         # Name of this cluster.
+spec:
+  internal: bool         # true: provision internal cluster, false: import external cluster
+  connection:
+    host: string         # Required for external, default to metadata.name for internal
+    port: int            # default to 5432
+    ssl: bool            # Should/does service require SSL. Default is false
+  rolesecret: string     # Required for external (name of secret with keys username and password
+                         # that SAS should use as credentials)
+  database: string       # Optional: name of sas database. 'SharedServices' is default
+  storage:               # Required for internal, ignored for external
+    accessmode: string   # Kubernetes accessmode for PVC, default is ReadWriteOnce
+    size: string         # Initial size of data PVC. Default is 128Gi. (Total space taken is
+                         # (size * 2) * [replicaCount * size])
+    storageclass: string # Crunchy Data access mode. Default is nfs-client
+  replicas: int          # Ignored for external, number of replica PostgreSQL clusters to create
+  resources:             # Ignored for external
+    postgres:            # How much CPU and memory to initially request for PostgreSQL pods
+      cpu: string        # default is 150m
+      memory: string     # default 2Gi
+    backrest:            # How much CPU and memory to intially request for backrest pods
+      cpu: string        # default is 0.01
+      memory: string     # default is 256Mi
+  limits:                # Ignored for external
+    postgres:            # Limit how much CPU and memory each PostgreSQL pod can increase to
+      cpu: string        # default is 8
+      memory: string     # default is 8Gi
+    backrest:            # Limit how much CPU and memory each backrest pod can increase to
+      cpu: string        # default is 1
+      memory: string     # default is 500Mi
+  postgresconf: string   # Ignored external, optional internal: name of configmap with key/values
+                         # to replace in postgresql.conf
+  pghbaconf: string      # Ignored external, optional internal: name of configmap with key/values
+                         # to add to pg_hba.conf
+  patroniconf: string    # Ignored external, optional internal: name of configmap with key/values
+                         # to update the patroni bootstrap config section of postgres-ha-bootstrap.yaml
+  shutdown: bool         # ignored external, place in shutdown state but do not delete</code></pre>
+    </body>
+</html>

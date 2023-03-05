@@ -1,0 +1,49 @@
+## Example postgres-storage-transformer to set storage on your Kubernetes cluster.
+##   - Internal PostgreSQL only.
+##   - This transformer does not apply if you opted for an external PostgreSQL instance. 
+##   - In the following code, user-defined values are indicated by a capitalized and
+##     hyphenated name set off by curly braces and a space at each end. To replace
+##     the variable, replace the curly braces, interior spaces, and the variable
+##     name. For instance, {{ STORAGE-SIZE-IN-GB }} could be replaced by 128Gi.
+##   - If there are two number signs, remove only the first. 
+##     Make sure block comments are aligned with the yaml data structure.
+
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: postgres-storage-transformer
+patch: |-
+
+  # # The STORAGE-SIZE-IN-GB should be a numeric value followed by the
+  # # units, such as 128Gi for 128 gigabytes. In Kubernetes, the units for
+  # # gigabytes is Gi.
+  # # Transform Standby PostgreSQL PVC Size
+  # - op: replace
+  #   path: /spec/storage/size
+  #   value: {{ STORAGE-SIZE-IN-GB }}
+
+  # # The STORAGE-CLASS should be a storage class, such as trident.
+  # # If using a non-default storage class, you must also set the
+  # # STORAGE-TYPE to "dynamic"
+  # - op: replace
+  #   path: /spec/storage/storageclass
+  #   value: {{ STORAGE-CLASS }}
+
+  # # Replace the variable with an access mode, such as ReadWriteOnce or
+  # # ReadWriteMany.
+  # # Archive storage access mode
+  # - op: replace
+  #   path: /spec/storage/accessmode
+  #   value: {{ ACCESS-MODE }}
+
+  # # The STORAGE-TYPE should be a storage type, such as create or
+  # # dynamic.
+  # - op: add
+  #   path: /metadata/annotations/sas.com~1crunchy-storage-type
+  #   value: {{ STORAGE-TYPE }}
+
+target:
+  group: webinfdsvr.sas.com
+  kind: Pgcluster
+  name: .*                   # By default, target all Pgclusters. Change to a specific name to target just one.
+  version: v1

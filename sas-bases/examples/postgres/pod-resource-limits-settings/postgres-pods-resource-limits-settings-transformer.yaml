@@ -1,0 +1,83 @@
+## Example postgres-pods-resource-limits-settings-transformer
+##   - To set PostgreSQL pods resource minimum and maximum values for CPU and memory on your Kubernetes cluster.
+##   - Internal PostgreSQL only.
+##   - In the following code, user-defined values are indicated by a capitalized and
+##     hyphenated name set off by curly braces and a space at each end. To replace
+##     the variable, replace the curly braces, interior spaces, and the variable name.
+##   - For instance,
+##       {{ LIMITS-CPU-COUNT }} should be replaced by a decimal number, such as "4.0".
+##       {{ LIMITS-MEMORY-SIZE }} should be replaced by a number and unit, such as "4Gi" or "756Mi".
+##       {{ REQUEST-CPU-COUNT }} should be replaced by a decimal number, such as "1.0".
+##       {{ REQUEST-MEMORY-SIZE }} should be replaced by a number and unit, such as "1Gi" or "512Mi".
+##
+##   NOTE:
+##     1. Ensure the values are enclosed in double quotation marks and, if needed,
+##        include proper unit values. In Kubernetes, the units for megabytes is Mi and gigabytes is Gi.
+##     2. The request value represents the minimum resource and must be less then or equal to the limits, or the maximum resource,
+##        value. Do not use zero (0) or negative values.
+##     3. As a best practice, SAS recommends that if you change one value, you change its companion value.
+##        For example, if you change the {{ LIMITS-MEMORY-SIZE }}, you should also change {{ REQUEST-MEMORY-SIZE }}.
+##     4. If you do not follow these guidelines, the PostgreSQL pods might not start or come up.
+##     5. Pay close attention to the comments below which instruct you to uncomment sections below them.
+##        If you attempt to uncomment a nested section without uncomment the parent section(s) above it,
+##        the contents may not be formatted correctly which could result in kustomize errors.
+##
+
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: postgres-pods-resource-limits-settings-transformer
+patch: |-
+
+  # # Uncomment this section if you would like to transform any of the below pod requests (minimum)
+  # - op: add
+  #   path: /spec/resources
+  #   value:
+
+  #     # # Uncomment this section to transform PostgreSQL pods requests (minimum)
+  #     # postgres:
+  #     #   # Transform PostgreSQL Pods Request (minimum) CPU Count is a decimal number i.e. "1.0".
+  #     #   cpu: "{{ REQUEST-CPU-COUNT }}"
+
+  #     #   # Transform PostgreSQL Pods Memory Size
+  #     #   # The REQUEST-MEMORY-SIZE should be a numeric value followed by the units
+  #     #   memory: "{{ REQUEST-MEMORY-SIZE }}"
+
+  #     # # Uncomment this section to transform Backrest pods requests (minimum)
+  #     # backrest:
+  #     #   # Transform Backrest Pods Request (minimum) CPU Count is a decimal number i.e. "1.0".
+  #     #   cpu: "{{ BACKREST-REQUEST-CPU-COUNT }}"
+
+  #     #   # Transform Backrest Pods Memory Size
+  #     #   # The REQUEST-MEMORY-SIZE should be a numeric value followed by the units
+  #     #   memory: "{{ BACKREST-REQUEST-MEMORY-SIZE }}"
+
+
+  # # Uncomment this section if you would like to transform any of the below pod limits (maximum)
+  # - op: add
+  #   path: /spec/limits
+  #   value:
+
+  #     # # Uncomment this section to transform PostgreSQL pods limits (maximum)
+  #     # postgres:
+  #     #   # Transform PostgreSQL Pods Limits (maximum) CPU Count is a decimal number i.e. "4.0".
+  #     #   cpu: "{{ LIMITS-CPU-COUNT }}"
+
+  #     #   # Transform PostgreSQL Pods Upper Memory Size Limits
+  #     #   # The LIMITS-MEMORY-SIZE should be a numeric value followed by the units
+  #     #   memory: "{{ LIMITS-MEMORY-SIZE }}"
+
+  #     # # Uncomment this section to transform Backrest pods limits (maximum)
+  #     # backrest:
+  #     #   # Transform Backrest Pods Limits (maximum) CPU Count is a decimal number i.e. "4.0".
+  #     #   cpu: "{{ BACKREST-LIMITS-CPU-COUNT }}"
+
+  #     #   # Transform Backrest Pods Upper Memory Size Limits
+  #     #   # The LIMITS-MEMORY-SIZE should be a numeric value followed by the units
+  #     #   memory: "{{ BACKREST-LIMITS-MEMORY-SIZE }}"
+
+target:
+  group: webinfdsvr.sas.com
+  kind: Pgcluster
+  name: .*                # By default, target all Pgclusters. Change to a specific name to target just one.
+  version: v1

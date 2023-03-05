@@ -1,0 +1,19 @@
+#
+# Example cdspghba-custom-config-transformer to add Postgres custom HBA values on your Kubernetes cluster.
+#   - Please refer to README.md for more information on setting Postgres custom HBA config.
+#   - Internal PostgreSQL only.
+#   - This transformer does not apply if you opted for an external PostgreSQL instance.
+#
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: cdspghba-custom-config-transformer
+patch: |-
+   - op: replace
+     path: /spec/pghbaconf
+     value: cdspostgres-override-pg-hba-conf
+target:
+  group: webinfdsvr.sas.com
+  kind: Pgcluster
+  name: sas-crunchy-data-cdspostgres
+  version: v1

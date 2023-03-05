@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <link rel="stylesheet" type="text/css" href="sas.css"/>
+        <title>Upgrade the PostgreSQL Operator and PostgreSQL Cluster</title>
+    </head>
+    <body>
+        <h1 id="139933132923712upgrade-the-postgresql-operator-and-postgresql-cluster">Upgrade the PostgreSQL Operator and PostgreSQL Cluster</h1>
+<h2 id="139933132923712overview">Overview</h2>
+<p>If you are updating your software, you must perform the following steps.
+If you are performing a new deployment of your software, these steps can be
+safely ignored.</p>
+<h2 id="139933132923712instructions">Instructions</h2>
+<p><strong>Note:</strong> These instructions apply to all internal PostgreSQL clusters.
+If you are using an external instance of PostgreSQL, do not perform any of these steps.</p>
+<p>Perform the steps in each of the following subsections. You must be an administrator with namespace permissions
+to perform the steps.</p>
+<h3 id="139933132923712scale-down-the-sas-data-server-operator">Scale Down the SAS Data Server Operator</h3>
+<ol>
+<li>
+<p>Scale down the existing SAS Data Server Operator deployment. In the following command, replace the entire variable {{ KUBERNETES-NAMESPACE }}, including the braces, with the actual namespace.</p>
+<pre class="highlight"><code class="language-bash">kubectl scale deployment --replicas=0 sas-data-server-operator -n {{ KUBERNETES-NAMESPACE }}</code></pre>
+
+<p>If you receive the following error, your SAS Viya deployment did not include the
+ SAS Data Server Operator. In this case, skip to <a href="#139933132923712terminate-postgresql-clusters">Terminate PostgreSQL Clusters</a>.</p>
+<pre class="highlight"><code class="language-bash">Error from server (NotFound): deployments.apps "sas-data-server-operator" not found</code></pre>
+
+</li>
+<li>
+<p>Ensure that there are no pods running the SAS Data Server Operator:</p>
+<pre class="highlight"><code class="language-bash">kubectl get po -l app=sas-data-server-operator -n {{ KUBERNETES-NAMESPACE }}</code></pre>
+
+<p>This is the expected output for this command:</p>
+<pre class="highlight"><code class="language-bash">No resources found in &lt; KUBERNETES-NAMESPACE &gt; namespace</code></pre>
+
+</li>
+</ol>
+<h3 id="139933132923712terminate-postgresql-clusters">Terminate PostgreSQL Clusters</h3>
+<ol>
+<li>
+<p>List the PostgreSQL clusters included in your deployment using the command below.</p>
+<pre class="highlight"><code class="language-bash">kubectl get pgclusters.crunchydata.com -n {{ KUBERNETES-NAMESPACE }}</code></pre>
+
+</li>
+<li>
+<p>Scale down the replica deployments. Scaling down fails back the primary if it was failed over to a replica.</p>
+<pre class="highlight"><code class="language-bash">kubectl scale --replicas=0 deployment --selector=crunchy-pgha-scope={{ PGCLUSTER-NAME }},name!={{ PGCLUSTER-NAME }} -n {{ KUBERNETES-NAMESPACE }}
+
+kubectl wait --for=delete --selector=crunchy-pgha-scope={{ PGCLUSTER-NAME }},name!={{ PGCLUSTER-NAME }} pods --timeout=300s -n {{ KUBERNETES-NAMESPACE }}</code></pre>
+
+<p>Ignore the following error, which is returned if the pods are already down before the wait command.</p>
+<pre class="highlight"><code class="language-bash">error: no matching resources found</code></pre>
+
+</li>
+<li>
+<p>Check the cluster to ensure only one pod is running as Leader.</p>
+<pre class="highlight"><code class="language-bash">kubectl exec deployment/{{ PGCLUSTER-NAME }} -c database -n {{ KUBERNETES-NAMESPACE }} -- patronictl list</code></pre>
+
+<p>The output would look something like the following:</p>
+<pre class="highlight"><code class="language-bash">+ Cluster: sas-crunchy-data-postgres (7016764262444130456) -----------+---------+---------+----+-----------+
+| Member                                                | Host        | Role    | State   | TL | Lag in MB |
++-------------------------------------------------------+-------------+---------+---------+----+-----------+
+| sas-crunchy-data-postgres-7f846c5d94-wlwrp            | 10.244.2.88 | Leader  | running | 19 |           |
++-------------------------------------------------------+-------------+---------+---------+----+-----------+</code></pre>
+
+</li>
+<li>
+<p>Delete the replica PVCs.</p>
+<pre class="highlight"><code class="language-bash">kubectl delete pvc $(kubectl get deploy --selector=crunchy-pgha-scope={{ PGCLUSTER-NAME }},name!={{ PGCLUSTER-NAME }} -o jsonpath='{.items[*].metadata.name}' -n {{ KUBERNETES-NAMESPACE }} ) --timeout=300s -n {{ KUBERNETES-NAMESPACE }}</code></pre>
+
+</li>
+<li>
+<p>Terminate the PostgreSQL cluster.</p>
+<p>Copy the template file <code>$deploy/sas-bases/examples/postgres/upgrade/pgtask-rmdata.yaml</code> to
+ your site-config directory, <code>$deploy/site-config/</code>. If a copy already exists, you may overwrite it.
+ Then, follow the instructions within the copied file to populate any necessary variables.</p>
+<p>After copying and filling out the file, apply it to terminate the PostgreSQL cluster.
+ Replace the entire variable {{ PGTASK-PATH }}, including the braces, with the expanded location of your copy of the file
+ <code>$deploy/sas-bases/examples/postgres/upgrade/pgtask-rmdata.yaml</code>.</p>
+<pre class="highlight"><code class="language-bash">kubectl apply -f {{ PGTASK-PATH }} -n {{ KUBERNETES-NAMESPACE }}</code></pre>
+
+<p><strong>Note:</strong> Your copy of the file <code>$deploy/sas-bases/examples/postgres/upgrade/pgtask-rmdata.yaml</code>
+ should NOT be added or referenced in any kustomization files. After applying it, you
+ may delete your copy of the file.</p>
+</li>
+<li>
+<p>Wait for the internal PostgreSQL pods to be terminated. Replace the entire variable
+{{ PGCLUSTER-NAME }}, including the braces, with the name of the PostgreSQL cluster you are
+targeting. For example, this may be sas-crunchy-data-postgres.</p>
+<pre class="highlight"><code class="language-bash">kubectl wait --for=delete --selector=pg-cluster={{ PGCLUSTER-NAME }} pods --timeout=300s -n {{ KUBERNETES-NAMESPACE }}</code></pre>
+
+</li>
+<li>
+<p>Wait for the custom resource pgtask to be terminated.</p>
+<pre class="highlight"><code class="language-bash">kubectl wait --for=delete --selector=pg-cluster={{ PGCLUSTER-NAME }} pgtask --timeout=300s -n {{ KUBERNETES-NAMESPACE }}</code></pre>
+
+</li>
+<li>
+<p>Remove the TLS artifacts for the PostgreSQL cluster. Replace the entire variable
+{{ PGCLUSTER-NAME }}, including the braces, with the name of the PostgreSQL cluster you are
+targeting. For example, this may be sas-crunchy-data-postgres.</p>
+<pre class="highlight"><code class="language-bash">kubectl delete job "{{ PGCLUSTER-NAME }}-tls-generator" --ignore-not-found=true --timeout=300s -n {{ KUBERNETES-NAMESPACE }}
+
+kubectl delete secret "{{ PGCLUSTER-NAME }}-tls-secret" --ignore-not-found=true --timeout=300s -n {{ KUBERNETES-NAMESPACE }}</code></pre>
+
+</li>
+<li>
+<p>Repeat steps 2-8 for all clusters listed in step 1.</p>
+</li>
+</ol>
+<h3 id="139933132923712delete-the-pgo-client-job">Delete the pgo-client Job</h3>
+<p>Run the following command to delete the pgo-client job.</p>
+<pre class="highlight"><code class="language-bash">kubectl delete job sas-crunchy-data-pgo-client --ignore-not-found true --timeout 300s -n {{ KUBERNETES-NAMESPACE }}</code></pre>
+
+<h3 id="139933132923712scale-down-the-postgresql-operator">Scale Down the PostgreSQL Operator</h3>
+<ol>
+<li>
+<p>Scale down the existing internal PostgreSQL Operator deployment:</p>
+<pre class="highlight"><code class="language-bash">kubectl scale deployment --replicas=0 sas-crunchy-data-postgres-operator -n {{ KUBERNETES-NAMESPACE }}</code></pre>
+
+</li>
+<li>
+<p>Ensure that there are no pods running the internal PostgreSQL operator.</p>
+<pre class="highlight"><code class="language-bash">kubectl get po -l vendor=crunchydata,pgrmdata!=true,name!=sas-crunchy-data-pgadmin -n {{ KUBERNETES-NAMESPACE }}</code></pre>
+
+<p>This is the expected output for this command:</p>
+<pre class="highlight"><code class="language-bash">No resources found in &lt; KUBERNETES-NAMESPACE &gt; namespace</code></pre>
+
+<p>Do not continue with your SAS Viya software update until the command
+ indicates that no resources have been found.</p>
+</li>
+</ol>
+<p>For more information on SAS Viya software updates, see
+<a href="http://documentation.sas.com/?cdcId=itopscdc&amp;cdcVersion=default&amp;docsetId=k8sag&amp;docsetTarget=p0hm2t63wm8qcqn1iqs6y8vw8y81.htm&amp;locale=en">Updating Your SAS Viya Software</a></p>
+    </body>
+</html>

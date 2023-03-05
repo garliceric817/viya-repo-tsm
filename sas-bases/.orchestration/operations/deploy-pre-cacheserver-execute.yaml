@@ -1,0 +1,24 @@
+apiVersion: orchestration.sas.com/v2beta10
+kind: LifecycleOperation
+metadata:
+  annotations:
+    sas.com/component-name: sas-cacheserver
+    sas.com/component-version: 1.30.5-20221103.1667487495149
+  creationTimestamp: null
+  name: deploy-pre-cacheserver-execute
+spec:
+  args:
+  - name: namespace
+  - name: timeout
+  steps:
+  - args:
+    - delete
+    - --namespace
+    - $namespace
+    - --wait
+    - --timeout
+    - $timeout
+    - --ignore-not-found
+    - service
+    - sas-cacheserver
+    cmd: kubectl

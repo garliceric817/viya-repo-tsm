@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <link rel="stylesheet" type="text/css" href="sas.css"/>
+        <title>Configuration Settings for PostgreSQL Storage Size, Storage Class, Storage Type, and Storage Access Mode</title>
+    </head>
+    <body>
+        <h1 id="139933132935568configuration-settings-for-postgresql-storage-size-storage-class-storage-type-and-storage-access-mode">Configuration Settings for PostgreSQL Storage Size, Storage Class, Storage Type, and Storage Access Mode</h1>
+<h2 id="139933132935568overview">Overview</h2>
+<p>This README describes the settings available for deploying PostgreSQL with
+custom size, storage class, storage type, and storage access mode. These
+settings are available only if you are using a internal version of PostgreSQL.</p>
+<h2 id="139933132935568installation">Installation</h2>
+<ol>
+<li>
+<p>The example file contains comments to assist in revising the file
+   appropriately.</p>
+</li>
+<li>
+<p>Copy the template transformer,
+   <code>postgres-storage-transformer.yaml</code>, into your
+   site-config directory, <code>$deploy/site-config</code>.</p>
+</li>
+<li>
+<p>In the copied transformer, a number of blocks are commented out. Each block
+   will adjust a particular storage value, as described by another
+   comment above each block. Uncomment sections as necessary and replace the
+   <code>{{ CHANGEME }}</code> token with the desired new value. Comments are lines with a
+   number sign (#) at the beginning of the line.</p>
+</li>
+<li>
+<p>Each block has information about its content. The variables in the block are
+   set off by curly braces and spaces, such as {{ STORAGE-SIZE-IN-GB }}.
+   Replace the entire variable string, including the braces, with the value
+   you want to use.</p>
+</li>
+<li>
+<p>After you have edited the file, add a reference to it in the transformers
+   block of the base kustomization.yaml file. For example:</p>
+<pre class="highlight"><code class="language-yaml">transformers:
+- site-config/postgres-storage-transformer.yaml</code></pre>
+
+</li>
+</ol>
+<h2 id="139933132935568examples">Examples</h2>
+<p>The example file is located at
+<code>$deploy/sas-bases/examples/postgres/storage/postgres-storage-transformer.yaml</code>.
+It includes content for configuring the following settings.</p>
+<ul>
+<li>Specify the PVC storage size, storage class, and access mode for all PVC&rsquo;s
+  generated for the PostgreSQL cluster.</li>
+</ul>
+<h2 id="139933132935568additional-resources">Additional Resources</h2>
+<p>For more information, see
+<a href="http://documentation.sas.com/?cdcId=itopscdc&amp;cdcVersion=default&amp;docsetId=dplyml0phy0dkr&amp;docsetTarget=titlepage.htm&amp;locale=en">SAS Viya Deployment Guide</a>.</p>
+<p>For more information about pgo.yaml configuration, go
+<a href="https://access.crunchydata.com/documentation/postgres-operator/latest/configuration/pgo-yaml-configuration/">here</a>.</p>
+    </body>
+</html>

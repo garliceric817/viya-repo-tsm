@@ -1,0 +1,14 @@
+apiVersion: orchestration.sas.com/v2beta10
+kind: LifecycleOperation
+metadata:
+  annotations:
+    sas.com/component-name: sas-cachelocator
+    sas.com/component-version: 1.30.5-20221103.1667487469808
+  creationTimestamp: null
+  name: deploy-assess-cachelocator-execute
+spec:
+  steps:
+  - args:
+    - sas.com/sas-cachelocator-update
+    - "true"
+    cmd: set_variable

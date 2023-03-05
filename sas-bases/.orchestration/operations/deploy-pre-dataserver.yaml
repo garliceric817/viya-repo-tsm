@@ -1,0 +1,28 @@
+apiVersion: orchestration.sas.com/v2beta11
+kind: LifecycleOperation
+metadata:
+  annotations:
+    sas.com/component-name: sas-data-server-operator
+    sas.com/component-version: 21.15.7-20221212.1670882997958
+  creationTimestamp: null
+  labels:
+    participate.lifecycle.sas.com/deploy-pre: "true"
+  name: deploy-pre-dataserver
+spec:
+  args:
+  - name: namespace
+    required: true
+  - name: timeout
+    required: true
+  - name: serviceAccountName
+  steps:
+  - args:
+    - deploy-pre-dataserver-execute
+    - --namespace
+    - $namespace
+    - --timeout
+    - $timeout
+    - --serviceAccountName
+    - $serviceAccountName
+    cmd: run
+    when: (.GetVariable "dataserver.sas.com/internal-postgres")

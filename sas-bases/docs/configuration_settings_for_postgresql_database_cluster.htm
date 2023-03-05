@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <link rel="stylesheet" type="text/css" href="sas.css"/>
+        <title>Configuration Settings for PostgreSQL Database Cluster</title>
+    </head>
+    <body>
+        <h1 id="139933133415136configuration-settings-for-postgresql-database-cluster">Configuration Settings for PostgreSQL Database Cluster</h1>
+<h2 id="139933133415136overview">Overview</h2>
+<p>If you deploy an internal instance of PostgreSQL, you can configure the PostgreSQL Server Parameters and Client Host Based Authentication (HBA) Rules you would like to use for your SAS Viya deployment. These changes are managed by the Data Server Operator via the Pgcluster custom resource.</p>
+<p>The default PostgreSQL cluster (used by most micro-services) is named <code>sas-crunchy-data-postgres</code>. Some of the SAS Viya products and solutions require their own PostgreSQL cluster in addition to the default. The following examples include a Common Data Store (CDS) PostgreSQL cluster named <code>sas-crunchy-data-cdspostgres</code>.</p>
+<p>Copy the files as needed from <code>$deploy/sas-bases/examples/postgres/custom-config</code> to the <code>$deploy/site-config</code> directory. The following are files for configuring the PostgreSQL clusters via the Pgcluster custom resource.</p>
+<ul>
+<li>
+<p>Default PostgreSQL: <code>sas-crunchy-data-postgres</code></p>
+<ul>
+<li><code>$deploy/sas-bases/examples/postgres/custom-config/sas-patroni-custom-config-transformer.yaml</code></li>
+<li><code>$deploy/sas-bases/examples/postgres/custom-config/sas-patroni-custom-config.yaml</code></li>
+<li><code>$deploy/sas-bases/examples/postgres/custom-config/sas-pghba-custom-config-transformer.yaml</code></li>
+<li><code>$deploy/sas-bases/examples/postgres/custom-config/sas-pghba-custom-config.yaml</code></li>
+<li><code>$deploy/sas-bases/examples/postgres/custom-config/sas-postgres-custom-config-transformer.yaml</code></li>
+<li><code>$deploy/sas-bases/examples/postgres/custom-config/sas-postgres-custom-config.yaml</code></li>
+</ul>
+</li>
+<li>
+<p>CDS PostgreSQL: <code>sas-crunchy-data-cdspostgres</code></p>
+<ul>
+<li><code>$deploy/sas-bases/examples/postgres/custom-config/sas-cdspatroni-custom-config-transformer.yaml</code></li>
+<li><code>$deploy/sas-bases/examples/postgres/custom-config/sas-cdspatroni-custom-config.yaml</code></li>
+<li><code>$deploy/sas-bases/examples/postgres/custom-config/sas-cdspghba-custom-config-transformer.yaml</code></li>
+<li><code>$deploy/sas-bases/examples/postgres/custom-config/sas-cdspghba-custom-config.yaml</code></li>
+<li><code>$deploy/sas-bases/examples/postgres/custom-config/sas-cdspostgres-custom-config-transformer.yaml</code></li>
+<li><code>$deploy/sas-bases/examples/postgres/custom-config/sas-cdspostgres-custom-config.yaml</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="139933133415136installation">Installation</h2>
+<p>There are three configuration options:</p>
+<ul>
+<li>Customize PostgreSQL Server Configuration File (<code>postgresql.conf</code>) Parameters</li>
+<li>Customize PostgreSQL Client Authentication File (<code>pg_hba.conf</code>) Parameters</li>
+<li>Customize Crunchy Data Patroni Configuration Settings (Wait Times)</li>
+</ul>
+<p><strong>Note:</strong> These are all optional. You can choose any combination of the configuration options or choose to not configure any of them.</p>
+<p>You must pay attention to PostgreSQL and HBA Conf Rules syntax, parameter names, and accepted values and units. Failure to do so may cause the cluster not to start. In case cluster start fails, check PostgreSQL server log file for errors.</p>
+<p>When you are done configuring PostgreSQL, continue your SAS Viya deployment
+as documented in the
+<a href="http://documentation.sas.com/?cdcId=itopscdc&amp;cdcVersion=default&amp;docsetId=dplyml0phy0dkr&amp;docsetTarget=titlepage.htm&amp;locale=en">SAS Viya Deployment Guide</a></p>
+<h3 id="139933133415136customize-postgresql-server-configuration-file-postgresqlconf-parameters">Customize PostgreSQL Server Configuration File (postgresql.conf) Parameters</h3>
+<p>To configure <code>postgresql.conf</code>, go to the base kustomization.yaml file (<code>$deploy/kustomization.yaml</code>). Add the following content to the resources and transformers blocks of that file, including adding the blocks if they do not already exist:</p>
+<pre class="highlight"><code class="language-yaml">resources:
+- site-config/sas-postgres-custom-config.yaml</code></pre>
+
+<pre class="highlight"><code class="language-yaml">transformers:
+- site-config/sas-postgres-custom-config-transformer.yaml</code></pre>
+
+<h3 id="139933133415136customize-postgresql-client-authentication-file-pg_hbaconf-parameters">Customize PostgreSQL Client Authentication File (pg_hba.conf) Parameters</h3>
+<p>To configure <code>pg_hba.conf</code>, go to the base kustomization.yaml file (<code>$deploy/kustomization.yaml</code>). Add the following content to the resources and transformers blocks of that file, including adding the blocks if they do not already exist:</p>
+<pre class="highlight"><code class="language-yaml">resources:
+- site-config/sas-pghba-custom-config.yaml</code></pre>
+
+<pre class="highlight"><code class="language-yaml">transformers:
+- site-config/sas-pghba-custom-config-transformer.yaml</code></pre>
+
+<h3 id="139933133415136customize-crunchy-data-patroni-configuration-settings-wait-times">Customize Crunchy Data Patroni Configuration Settings (Wait Times)</h3>
+<p>The Patroni option is used in case the Kubernetes cluster experiences delays in response times due to issues such as limited resources or network latency. The Patroni option attempts to address those failures by increasing the wait times.</p>
+<p>To configure Patroni Conf, go to the base kustomization.yaml file (<code>$deploy/kustomization.yaml</code>). Add the following content to the resources and transformers blocks of that file, including adding the blocks if they do not already exist:</p>
+<pre class="highlight"><code class="language-yaml">resources:
+- site-config/sas-patroni-custom-config.yaml</code></pre>
+
+<pre class="highlight"><code class="language-yaml">transformers:
+- site-config/sas-patroni-custom-config-transformer.yaml</code></pre>
+
+<h3 id="139933133415136cdspostgresql-cluster">CDSPostgreSQL Cluster</h3>
+<p>You can configure the CDSPostgreSQL cluster (<code>sas-crunchy-data-cdspostgres</code>) in the same way you configure the <code>sas-crunchy-data-postgres</code> cluster. If your order contains CDS, you can add the <code>sas-crunchy-data-cdspostgres</code> contents to the resources and transformers sections.</p>
+<p>Here is an example with all three CDS transformers.</p>
+<pre class="highlight"><code class="language-yaml">resources:
+- site-config/sas-cdspatroni-custom-config.yaml
+- site-config/sas-cdspostgres-custom-config.yaml
+- site-config/sas-cdspghba-custom-config.yaml</code></pre>
+
+<pre class="highlight"><code class="language-yaml">transformers:
+- site-config/sas-cdspatroni-custom-config-transformer.yaml
+- site-config/sas-cdspostgres-custom-config-transformer.yaml
+- site-config/sas-cdspghba-custom-config-transformer.yaml</code></pre>
+
+<h2 id="139933133415136additional-resources">Additional Resources</h2>
+<p>For more information, see
+<a href="http://documentation.sas.com/?cdcId=itopscdc&amp;cdcVersion=default&amp;docsetId=dplyml0phy0dkr&amp;docsetTarget=titlepage.htm&amp;locale=en">SAS Viya Deployment Guide</a>.</p>
+<p><a href="https://www.postgresql.org/docs/12/config-setting.html">PostgreSQL Server Configuration</a></p>
+<p><a href="https://www.postgresql.org/docs/12/auth-pg-hba-conf.html">PostgreSQL Client Host Based Authentication (HBA)</a></p>
+<p><a href="https://access.crunchydata.com/documentation/patroni/latest/settings/index.html#settings">Crunchy Data Patroni Configuration Settings</a></p>
+    </body>
+</html>

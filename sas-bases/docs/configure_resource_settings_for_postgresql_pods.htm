@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <link rel="stylesheet" type="text/css" href="sas.css"/>
+        <title>Configure Resource Settings for PostgreSQL Pods</title>
+    </head>
+    <body>
+        <h1 id="139933133631696configure-resource-settings-for-postgresql-pods">Configure Resource Settings for PostgreSQL Pods</h1>
+<h2 id="139933133631696overview">Overview</h2>
+<p>These settings are available only if you are using an internal version of
+PostgreSQL.</p>
+<p>This README describes how to adjust the CPU and memory usage of the PostgreSQL
+pods. The minimum for each of these values is described by their <strong>request</strong> and
+the maximum for each of these values is describe by their <strong>limit</strong>.</p>
+<p>This directory includes a template kustomize transformer to adjust these values.</p>
+<h2 id="139933133631696installation">Installation</h2>
+<ol>
+<li>
+<p>The example transformer is almost entirely commented out. The uncommented
+   sections are required and used to target the Pgcluster resources.</p>
+</li>
+<li>
+<p>Copy the template transformer
+   <code>$deploy/sas-bases/examples/postgres/pod-resource-limits-settings/postgres-pods-resource-limits-settings-transformer.yaml</code> into your
+   site-config directory, <code>$deploy/site-config</code>.</p>
+</li>
+<li>
+<p>In the copied transformer, a number of blocks are commented out. Each block
+   will adjust a particular cpu/memory request/limit, as described by another
+   comment above each block. Uncomment sections as necessary and replace the
+   <code>{{ CHANGEME }}</code> token with the desired new value. Comments are lines with a
+   number sign (#) at the beginning of the line.</p>
+<p><strong>Note:</strong> As a best practice, SAS recommends that if you change one value,
+ you change its companion value. For example, if you change the
+ <code>{{ LIMITS-MEMORY-SIZE }}</code>, you should also change
+ <code>{{ REQUEST-MEMORY-SIZE }}</code>.</p>
+</li>
+<li>
+<p>Ensure the values are enclosed in double quotation marks and, if needed,
+   with proper unit values. In Kubernetes, the units for megabytes is Mi
+   (such as 512Mi), and the units for gigabytes is Gi (such as 4Gi).</p>
+</li>
+<li>
+<p>The <strong>Request</strong> (minimum resource) value must be less then or equal to the
+   <strong>Limits</strong> (maximum resource) value. Do not use zero (0) or negative values.</p>
+</li>
+<li>
+<p>After you have edited the file, add a reference to it in the transformers
+   block of the base kustomization.yaml (<code>$deploy/kustomization.yaml</code>) file.
+   For example:</p>
+<pre class="highlight"><code class="language-yaml">transformers:
+- site-config/postgres-pods-resource-limits-settings-transformer.yaml</code></pre>
+
+</li>
+</ol>
+<h2 id="139933133631696examples">Examples</h2>
+<p>The example file is located at
+<code>$deploy/sas-bases/examples/postgres/pods-resource-limits-settings/postgres-pods-resource-limits-settings-transformer.yaml</code>.
+It includes content for configuring the following settings:</p>
+<ul>
+<li>Specify the PostgreSQL pods Limits (maximum resource) for CPU count</li>
+<li>Specify the PostgreSQL pods Limits (maximum resource) for memory size</li>
+<li>Specify the PostgreSQL pods Request (minimum resource) for CPU count</li>
+<li>Specify the PostgreSQL pods Request (minimum resource) for memory size</li>
+<li>Specify the Backrest pods Limits (maximum resource) for CPU count</li>
+<li>Specify the Backrest pods Limits (maximum resource) for memory size</li>
+<li>Specify the Backrest pods Request (minimum resource) for CPU count</li>
+<li>Specify the Backrest pods Request (minimum resource) for memory size</li>
+</ul>
+<h2 id="139933133631696additional-resources">Additional Resources</h2>
+<p>For more information, see
+<a href="http://documentation.sas.com/?cdcId=itopscdc&amp;cdcVersion=default&amp;docsetId=dplyml0phy0dkr&amp;docsetTarget=titlepage.htm&amp;locale=en">SAS Viya Deployment Guide</a>.</p>
+<p>For more information about <strong>Pod CPU resource</strong> configuration, go
+<a href="https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/">here</a>.</p>
+<p>For more information about <strong>Pod memory resource</strong> configuration, go
+<a href="https://kubernetes.io/docs/tasks/configure-pod-container/assign-memory-resource/">here</a>.</p>
+    </body>
+</html>

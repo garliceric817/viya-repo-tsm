@@ -1,0 +1,37 @@
+apiVersion: orchestration.sas.com/v3beta6
+kind: LifecycleOperation
+metadata:
+  annotations:
+    sas.com/component-name: sas-k8s-common
+    sas.com/component-version: 2.56.2-20220919.1663599580201
+  creationTimestamp: null
+  name: version-check-lib
+spec:
+  source: |-
+    package versionchecklib
+    import (
+      "sas/orchestration/lifecycle/cadence"
+    )
+    type VersionInfo struct {
+      Cadence string
+      Version string
+      Release string
+    }
+    type ManifestVersionInfo struct {
+      VersionInfo
+      BaseCadence string
+      BaseVersion string
+    }
+    // IsUpdateAllowed returns nil if updating from the clusterInfo to the
+    // manifestInfo is allowed. Otherwise, it returns the appropriate error.
+    //
+    // THIS FUNCTION IS DEPRECATED
+    //
+    // Callers should convert to v3beta6 and leverage direct calls into the
+    // cadence library. See the version-check assess operation for an
+    // example.
+    func IsUpdateAllowed(clusterInfo VersionInfo, manifestInfo ManifestVersionInfo) error {
+      clusterCadence := cadence.NewCadenceInfo(clusterInfo.Cadence, clusterInfo.Version, clusterInfo.Release)
+      manifestCadence := cadence.NewCadenceInfoWithBase(manifestInfo.Cadence, manifestInfo.Version, manifestInfo.Release, manifestInfo.BaseCadence, manifestInfo.BaseVersion)
+      return cadence.VerifyUpdateIsAllowed(clusterCadence, manifestCadence)
+    }

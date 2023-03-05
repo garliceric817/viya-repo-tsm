@@ -1,0 +1,14 @@
+apiVersion: orchestration.sas.com/v2beta10
+kind: LifecycleOperation
+metadata:
+  annotations:
+    sas.com/component-name: sas-cacheserver
+    sas.com/component-version: 1.30.5-20221103.1667487495149
+  creationTimestamp: null
+  name: deploy-assess-cacheserver-execute
+spec:
+  steps:
+  - args:
+    - sas.com/sas-cacheserver-update
+    - "true"
+    cmd: set_variable

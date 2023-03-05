@@ -1,0 +1,152 @@
+########SECCOMP PATCHES#######################
+#Delete seccomp profile from all deployment pods
+---
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: remove-seccomp-profile-from-deployment
+patch: |-
+  - op: replace
+    path: /spec/template/metadata/annotations/seccomp.security.alpha.kubernetes.io~1pod
+    value: {}
+  - op: remove
+    path: /spec/template/metadata/annotations/seccomp.security.alpha.kubernetes.io~1pod
+target:
+  kind: Deployment
+
+#Delete seccomp profile from all statefulset pods
+---
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: remove-seccomp-profile-from-statefulset
+patch: |-
+  - op: replace
+    path: /spec/template/metadata/annotations/seccomp.security.alpha.kubernetes.io~1pod
+    value: {}
+  - op: remove
+    path: /spec/template/metadata/annotations/seccomp.security.alpha.kubernetes.io~1pod
+target:
+  kind: StatefulSet
+
+#Delete seccomp profile from all cronjob pods
+---
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: remove-seccomp-profile-from-cronjob
+patch: |-
+  - op: replace
+    path: /spec/jobTemplate/spec/template/metadata/annotations/seccomp.security.alpha.kubernetes.io~1pod
+    value: {}
+  - op: remove
+    path: /spec/jobTemplate/spec/template/metadata/annotations/seccomp.security.alpha.kubernetes.io~1pod
+target:
+  kind: CronJob
+
+#Delete seccomp profile from all job pods
+---
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: remove-seccomp-profile-from-job
+patch: |-
+  - op: replace
+    path: /spec/template/metadata/annotations/seccomp.security.alpha.kubernetes.io~1pod
+    value: {}
+  - op: remove
+    path: /spec/template/metadata/annotations/seccomp.security.alpha.kubernetes.io~1pod
+target:
+  kind: Job
+
+#Delete seccomp profile from all podsTemplate
+---
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: remove-seccomp-profile-from-podTemplate
+patch: |-
+  - op: replace
+    path: /template/metadata/annotations/seccomp.security.alpha.kubernetes.io~1pod
+    value: {}
+  - op: remove
+    path: /template/metadata/annotations/seccomp.security.alpha.kubernetes.io~1pod
+target:
+  kind: PodTemplate
+
+#Delete seccomp profile from ESP pods
+---
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: remove-seccomp-profile-from-espconfig
+patch: |-
+  - op: replace
+    path: /spec/projectTemplate/deployment/spec/template/metadata/annotations/seccomp.security.alpha.kubernetes.io~1pod
+    value: {}
+  - op: remove
+    path: /spec/projectTemplate/deployment/spec/template/metadata/annotations/seccomp.security.alpha.kubernetes.io~1pod
+target:
+  kind: ESPConfig
+
+#Delete seccomp profile from all casdeployment pods
+---
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: cas-disable-seccomp
+patch: |-
+   - op: replace
+     path: /spec/disableSeccomp
+     value:
+       true
+target:
+  group: viya.sas.com
+  kind: CASDeployment
+  name: .*
+  version: v1alpha1
+
+#Delete seccomp profile from opendistro pods
+---
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: opendistro-disable-seccomp
+patch: |-
+   - op: replace
+     path: /spec/disableSeccomp
+     value:
+       true
+target:
+  group: opendistro.sas.com
+  kind: OpenDistroCluster
+
+#Delete seccomp profile from crunchy pods
+---
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: remove-seccomp-profile-from-pg-cluster
+patch: |-
+  - op: replace
+    path: /metadata/annotations/seccomp.security.alpha.kubernetes.io~1pod
+    value: {}
+  - op: remove
+    path: /metadata/annotations/seccomp.security.alpha.kubernetes.io~1pod
+target:
+  kind: Pgcluster
+
+#Delete seccomp profile from daemonsets
+---
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: remove-seccomp-profile-from-daemonset
+patch: |-
+  - op: replace
+    path: /spec/template/metadata/annotations/seccomp.security.alpha.kubernetes.io~1pod
+    value: {}
+  - op: remove
+    path: /spec/template/metadata/annotations/seccomp.security.alpha.kubernetes.io~1pod
+target:
+  kind: DaemonSet

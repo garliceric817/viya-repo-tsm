@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cas-cache-data
+  namespace: viya4deploy ### update the namespace value accordingly
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  volumeName: cas-disk-cache
+  resources:
+    requests:
+      storage: 25Gi
+

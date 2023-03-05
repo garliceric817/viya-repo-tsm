@@ -1,0 +1,14 @@
+#
+# NOTE:
+#  - The following is an example of a configMap to override values in the postgresql.conf.
+#  - This is *NOT* required. Only use this if you wish to adjust the default values.
+#  - This example shows a configMap which will set shared buffers to 2GB. This is 
+#    *NOT* a recommendation for this value, just a demonstration of changing a value.
+#  - Internal PostgreSQL only.
+#
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-override-pg-conf
+data:
+  shared_buffers: 2GB

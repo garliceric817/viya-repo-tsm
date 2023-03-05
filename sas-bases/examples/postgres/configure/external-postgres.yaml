@@ -1,0 +1,34 @@
+# To specify an external PostgreSQL instance for your SAS deployment,
+# create the following resource and apply it to your SAS namespace.
+
+apiVersion: webinfdsvr.sas.com/v1
+kind: Pgcluster
+metadata:
+  name: postgres                     # Name of Pgcluster resource
+  annotations:
+    sas.com/default-database: "true"
+spec:
+  internal: false                    # false: sas should use an external PostgreSQL
+  connection:
+    host: myhost.postgres.com        # host name for the entrypoint to the PostgreSQL cluster
+    port: 5432                       # port for the entrypoint to the PostgreSQL cluster
+    ssl: true                        # external cluster requires an SSL connection
+  rolesecret: postgres-user          # name of secret holding credentials
+  database: SharedServices           # database on external cluster SAS should use
+
+---
+# You must define a secret with the role username/password for the
+# database. This secret should be unique to the database for which
+# it contains credentials. SAS recommends that you name the secret
+# something recognizable, such as "{{ PGCLUSTER-NAME }}-user". If
+# you modify the secret name below, also update the spec.rolesecret
+# field above to match.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-user                # Name of the secret containing external PostgreSQL credentials
+  labels:
+    pg-cluster: postgres
+stringData:
+  username: dbmsowner                # username key is the name of the role
+  password: pass                     # password key is the password for the role

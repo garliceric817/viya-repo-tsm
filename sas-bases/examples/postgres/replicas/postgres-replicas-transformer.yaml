@@ -1,0 +1,22 @@
+# Example postgres-replicas-transformer to set replicas on your Kubernetes cluster.
+#   - Please refer to README.md for more information on setting replicas.
+#   - Internal PostgreSQL only.
+#   - This transformer does not apply if you opted for an external PostgreSQL instance.
+#   - Replace REPLICAS-COUNT with the number of replicas you want to use.
+#   - The value should be a whole number, like 2.
+
+# Customize replicas
+
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: postgres-replicas-transformer
+patch: |-
+   - op: replace
+     path: /spec/replicas
+     value: {{ REPLICAS-COUNT }}
+target:
+  group: webinfdsvr.sas.com
+  kind: Pgcluster
+  name: .*                       # By default, target all Pgclusters. Change to a specific name to target just one.
+  version: v1

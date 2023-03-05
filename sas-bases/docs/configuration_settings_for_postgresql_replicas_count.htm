@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <link rel="stylesheet" type="text/css" href="sas.css"/>
+        <title>Configuration Settings for PostgreSQL Replicas Count</title>
+    </head>
+    <body>
+        <h1 id="139933133878032configuration-settings-for-postgresql-replicas-count">Configuration Settings for PostgreSQL Replicas Count</h1>
+<h2 id="139933133878032overview">Overview</h2>
+<p>PostgreSQL High Availability (HA) cluster deployments have one primary database
+and one or more standby databases. Data is replicated from the primary database
+to the standby database. In Kubernetes, a standby database is referred to as
+a replica. This README describes how to configure the number of replicas in
+a PostgreSQL HA cluster.</p>
+<p><strong>Note</strong>: The number of replicas can only be configured during the initial deployment 
+of the HA PostgreSQL cluster. The replica count cannot be changed after the initial deployment.</p>
+<h2 id="139933133878032installation">Installation</h2>
+<ol>
+<li>
+<p>The example file contains comments to assist in revising the file
+   appropriately.</p>
+</li>
+<li>
+<p>Copy the example file to a new location before making modifications, such as
+   <code>$deploy/site-config</code>.</p>
+</li>
+<li>
+<p>The variable in the file is set off by curly braces and spaces, such as
+   {{ REPLICAS-COUNT }}. Replace the entire variable string, including the
+   braces, with the value you want to use.</p>
+</li>
+<li>
+<p>After you have edited the copy, add a reference to it in the transformers
+   block of the base kustomization.yaml file. For example:</p>
+<pre class="highlight"><code class="language-yaml">transformers:
+- site-config/postgres-replicas-transformer.yaml</code></pre>
+
+</li>
+</ol>
+<h2 id="139933133878032examples">Examples</h2>
+<p>The example file is located at
+<code>sas-bases/examples/postgres/replicas/postgres-replicas-transformer.yaml</code>.</p>
+<h2 id="139933133878032additional-resources">Additional Resources</h2>
+<p>For more information, see
+<a href="http://documentation.sas.com/?cdcId=itopscdc&amp;cdcVersion=default&amp;docsetId=dplyml0phy0dkr&amp;docsetTarget=titlepage.htm&amp;locale=en">SAS Viya Deployment Guide</a>.</p>
+<p>For more information about pgo.yaml configuration, go
+<a href="https://access.crunchydata.com/documentation/postgres-operator/latest/configuration/pgo-yaml-configuration/">here</a>.</p>
+    </body>
+</html>
